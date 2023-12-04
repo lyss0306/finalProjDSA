@@ -7,7 +7,10 @@
 #include <vector>
 #include <string>
 #include <regex>
-#include <set> //as we are two people in a group we are allowed one data structure from a library
+#include <cmath>
+#include <unordered_map>
+#include <unordered_set>
+#include <set>
 
 
 
@@ -30,6 +33,7 @@ struct GameNode {
 
     std::vector<double> genreVec;
 
+    double similarity; //for sorts
 
 
 };
@@ -38,10 +42,11 @@ class setupMethods
 {
     private:
         GameNode parseCSVRow();
-        double cosineSimilarity(const std::vector<double>& vecA, const std::vector<double>& vecB);
+        template <typename T> void printVector(const std::vector<T>& vec);
+        static double cosineSimilarity(const std::vector<double>& vecA, const std::vector<double>& vecB);
     public:
         setupMethods();
-        double getSimilarity(const GameNode& root, const GameNode& node);
+        static double getSimilarity(const GameNode& root, const GameNode& node);
         // Vector to store the GameNodes
         std::vector<GameNode> nodes;
         std::string row;
@@ -51,8 +56,57 @@ class setupMethods
         
 };
 
-setupMethods::setupMethods()
-{
+std::vector<std::string> tokenize(const std::string& text) {
+    std::vector<std::string> tokens;
+    std::unordered_set<std::string> uniqueTokens;
+
+    std::regex wordRegex(R"([^[:space:]]+)"); // Keep only alphanumeric and exclude whitespace
+
+    for (std::sregex_iterator it(text.begin(), text.end(), wordRegex), end; it != end; ++it) {
+        std::string token = it->str();
+
+        std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+
+        // Check if the lowercase token is already in the set
+        if (uniqueTokens.insert(token).second) {
+            // If not found (insert successful), add it to the vector
+            tokens.push_back(token);
+        }
+    }
+
+    return tokens; // Return vector of unique words that were separated by spaces
+}
+void countVectorization(std::vector<GameNode>& nodes) {
+    // Create a vocabulary
+    std::unordered_set <std::string> vocabulary;
+    for (const auto& node : nodes) {
+        auto tokens = tokenize(node.genre);
+        vocabulary.insert(tokens.begin(), tokens.end());
+    }
+
+
+    // Initialize a dictionary to store word counts for each node.genre
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> countMatrix;
+    for (const auto& node : nodes) {
+        auto tokens = tokenize(node.genre);
+        for (const std::string& word : tokens) {
+            countMatrix[node.name + node.platform][word]++;
+        }
+    }
+
+    std::unordered_map<std::string, std::vector<double>> genreMap;
+
+    for ( auto& node : nodes) {
+        std::vector<double> row;
+        row.reserve(vocabulary.size());
+        for (const std::string& word : vocabulary) {
+            row.push_back(countMatrix[node.name+node.platform][word]);
+        }
+        node.genreVec = row;
+    }
+}
+
+setupMethods::setupMethods() {
     std::ifstream inputFile("assets/games-data.csv");
 
     if (!inputFile.is_open()) {
@@ -64,16 +118,18 @@ setupMethods::setupMethods()
     std::getline(inputFile, header);
 
 
-    
-
-    
-
-    int asdf =0;
+    int asdf = 0;
     while (std::getline(inputFile, row)) {
         GameNode node = parseCSVRow();
-        games.insert(std::pair<std::string, GameNode>(node.name, node));
         nodes.push_back(node);
     }
+    countVectorization(nodes);
+    for (const auto& node: nodes) {
+    games.insert(std::pair<std::string, GameNode>(node.name, node));
+    }
+
+
+
 
     inputFile.close();
 }
@@ -93,11 +149,12 @@ GameNode setupMethods::parseCSVRow() {
         // cout << "bruh" << endl;
         std::getline(iss, token, '\"');
         std::getline(iss, token, '\"');
-        std::replace(token.begin(), token.end(), ',', ' ');
+        //std::replace(token.begin(), token.end(), ',', ' ');
         node.name = token;
+        std::getline(iss,token,',');
     }
 
-
+    
     //platform
     std::getline(iss, node.platform, ',');
 
@@ -211,22 +268,22 @@ double setupMethods::getSimilarity(const GameNode& root, const GameNode& node)
         similarity += -1;
     }
     if(node.platform == root.platform){
-        similarity += .1;
+        similarity += .05;
     }
     if(node.developer == root.developer){
         similarity += .1;
     }
     if(node.players == root.players){
-        similarity += .1;
+        similarity += .05;
     }
-    similarity += cosineSimilarity(root.genreVec,node.genreVec) * .4;
+    similarity += cosineSimilarity(root.genreVec,node.genreVec) * .45;
 
     std::vector<double> nodeNums, rootNums;
     nodeNums.emplace_back(node.releaseYear/2023);
     nodeNums.emplace_back(node.score/100);
     nodeNums.emplace_back(node.userScore);
     nodeNums.emplace_back(node.critics/100);
-    nodeNums.emplace_back(node.users/2000);
+    nodeNums.emplace_back(node.users/800);
 
 
     rootNums.emplace_back(root.releaseYear/2023);
@@ -235,11 +292,19 @@ double setupMethods::getSimilarity(const GameNode& root, const GameNode& node)
     rootNums.emplace_back(root.critics/100);
     rootNums.emplace_back(root.users/2000);
 
-    similarity += cosineSimilarity(nodeNums,rootNums)*.3;
+    similarity += cosineSimilarity(nodeNums,rootNums)*.35;
 
-
+    //similarity += (node.userScore)/2;
 
 
     return similarity;
+}
+
+
+template <typename T> void setupMethods::printVector(const std::vector<T>& vec) {
+    for (const auto& element : vec) {
+        std::cout << element << " ";
+    }
+    std::cout << std::endl;
 }
 #endif //UNTITLED2_READCSV_H
