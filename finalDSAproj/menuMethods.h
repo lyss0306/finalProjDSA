@@ -4,7 +4,8 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <map> //as we are two people in a group we are allowed one data structure from a library
+#include <chrono>
+#include <map> //as we are two people in a group we are allowed a data structure from a library
 
 #include "readcsv.h"
 #include "mergesort.h"
@@ -16,10 +17,10 @@ class menuMethods
 {
     public:
         menuMethods();
-        void binaryInsertion(std::string name, setupMethods& readCSV);
-        void displayInfo(std::string name, setupMethods& readCSV);
-        void MergeSort(std::string name, setupMethods& readCSV);
-        void HeapSort(std::string name, setupMethods& readCSV);
+        void binaryInsertion(std::string name, setupMethods& readCSV); //option 1
+        void displayInfo(std::string name, setupMethods& readCSV); //option 2
+        void MergeSort(std::string name, setupMethods& readCSV); //option 3
+        void HeapSort(std::string name, setupMethods& readCSV); //option 4
         
 
     private:
@@ -49,13 +50,13 @@ void menuMethods::binaryInsertion(std::string name, setupMethods& readCSV)
                 std::getline(std::cin, numOfInputs);
                 std::cout << std::endl;
             }
-            //auto start_time = std::chrono::high_resolution_clock::now();
+            auto start_time = std::chrono::high_resolution_clock::now();
 
             //binary search insertion
             for(const auto& node : readCSV.nodes) //insert nodes into temp
             {
                 double simil = readCSV.getSimilarity(readCSV.games[name], node);
-                if(name == node.name)
+                if(name == node.name) // prevent same game from printing
                 {
                     continue;
                 }
@@ -64,8 +65,8 @@ void menuMethods::binaryInsertion(std::string name, setupMethods& readCSV)
 
 
             }
-            //auto end_time = std::chrono::high_resolution_clock::now();
-            //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
 
             int max = std::min(stoi(numOfInputs),int(readCSV.nodes.size()-1));
@@ -73,7 +74,7 @@ void menuMethods::binaryInsertion(std::string name, setupMethods& readCSV)
             {
                 if(count != max)
                 {
-                    std::cout << it->second << ": " << (it->first)*100 << std::endl;
+                    std::cout << it->second << ": " << (it->first)*100 << std::endl; // print name and similarity
                     count ++;
                 }
                 else
@@ -82,7 +83,8 @@ void menuMethods::binaryInsertion(std::string name, setupMethods& readCSV)
                 }
 
             }
-            std::cout << std::endl;
+            
+            std::cout << "\nExecution time: " << duration.count() << " microseconds \n" << std::endl << endl;
 }
 
 void menuMethods::displayInfo(std::string name, setupMethods& readCSV)
@@ -139,12 +141,12 @@ void menuMethods::MergeSort(std::string name, setupMethods& readCSV)
             }
 
 
-            //auto start_time = std::chrono::high_resolution_clock::now();
+            auto start_time = std::chrono::high_resolution_clock::now();
             mergeSort(mergesorted, 0, mergesorted.size() - 1);
 
 
-            //auto end_time = std::chrono::high_resolution_clock::now();
-            //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
             count = std::min(stoi(numOfInputs),int(readCSV.nodes.size()-1));
             for(int i = 0; i < count; ++i)
@@ -152,9 +154,7 @@ void menuMethods::MergeSort(std::string name, setupMethods& readCSV)
                 cout << mergesorted[i].name<< ": " << mergesorted[i].similarity*100 << std::endl;
             }
 
-
-            std::cout << std::endl;
-            //std::cout << "Execution time: " << duration.count() << " microseconds " << std::endl << endl;
+            std::cout << "\nExecution time: " << duration.count() << " microseconds \n" << std::endl << endl;
 
 }
 
@@ -191,13 +191,13 @@ void menuMethods::HeapSort(std::string name, setupMethods& readCSV)
     }
 
 
-    //auto start_time = std::chrono::high_resolution_clock::now();
+    auto start_time = std::chrono::high_resolution_clock::now();
 
     //std::priority_queue<GameNode, std::vector<GameNode>, CompareGameNode> maxheap(temp.begin(), temp.end());
     maxheap.pushVector(temp);
 
-    //auto end_time = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
 
     //print
@@ -208,8 +208,7 @@ void menuMethods::HeapSort(std::string name, setupMethods& readCSV)
         maxheap.pop();
     }
 
-    std::cout << std::endl;
-    //std::cout << "Execution time: " << duration.count() << " microseconds " << std::endl << endl;
+    std::cout << "\nExecution time: " << duration.count() << " microseconds \n" << std::endl << endl;
 
 }
 
